@@ -551,6 +551,33 @@ int ExternalDisplay::getBestMode() {
             bestMode = mode;
         }
     }
+
+    /*
+     * -- mhack --
+     *
+     * For some weird reason, the mode picking algorithm here (getModeOrder())
+     * doesn't pay attention to the order of listed edids, which is used to
+     * indicate a display's preferred timing, as of the E-EDID Standard Section
+     * 3.10.
+     *
+     * In some cases, this could cause scaling weirdness. The Nexdock, for
+     * example, reports 720p as the best supported mode, but also lists 1080p
+     * further down (why it does this I have no idea), even though native res
+     * is 1366x768.  getModeOrder() will always pick 1080p in this case, which
+     * looks nasty.
+     *
+     * Fix: Just pick the first edid mode listed as the monitor's preferred
+     * mode.
+     */
+    char property_value[PROPERTY_VALUE_MAX];
+    property_get("persist.m.hdmi.try_native_mode", property_value, "0");
+    int overrideEnabled = atoi(property_value);
+    if (overrideEnabled && mModeCount > 0 && (bestMode != mEDIDModes[0])) {
+        ALOGW("try_native_mode: Overriding best mode = %d and choosing first mode = %d!",
+                bestMode, mEDIDModes[0]);
+        bestMode = mEDIDModes[0];
+    }
+
     return bestMode;
 }
 
