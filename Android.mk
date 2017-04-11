@@ -29,3 +29,9 @@ ifneq ($(TARGET_BOARD_AUTO),true)
     endif
   endif
 endif
+
+ifneq ($(TARGET_BOARD_AUTO),true)
+  ifneq ($(filter msm8974 msm8x74,$(TARGET_BOARD_PLATFORM)),)
+    include $(call all-named-subdir-makefiles,msm8974)
+  endif
+endif
